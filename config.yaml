@@ -1,0 +1,18 @@
+
+
+data:
+  base_path: data/
+  ground_truth: ground_truth.nc
+  reconstructions:
+    base_path: data/predictions/
+    plain:
+      full: full_pred_1807.npy
+      loo: loo_pred_1807.nc
+    analog_3p:
+      full: full_pred_1807_analog_3p.npy
+      loo: loo_pred_1807_analog_3p.nc
+    analog_3p_WT:
+      full: full_pred_1807_analog_3p_WT.npy
+      loo: loo_pred_1807_analog_3p_WT.nc
+  metadata:
+    station_indices: todo
