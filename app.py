@@ -18,8 +18,9 @@ from datetime import date
 
 from data_loading import load_full_reconstruction, load_loo_reconstruction, load_ground_truth, get_station_indices_map
 from taylor_helpers import get_taylor_fig
-from my_plotting import display_predictions
-from config import get_config, DATA_SET_KEY_NAME_MAP, DATA_SET_NAME_KEY_MAP
+from my_plotting import display_predictions, create_station_line_plot
+from config import get_config, DATA_SET_KEY_NAME_MAP, DATA_SET_NAME_KEY_MAP, DATA_SET_DESCRIPTIONS
+from data_transformer import extract_stations_from_nc
 
 conf = get_config()
 
@@ -38,17 +39,15 @@ reconstruction_selections = (DATA_SET_KEY_NAME_MAP['plain'],
                              DATA_SET_KEY_NAME_MAP['analog_3p'],
                              DATA_SET_KEY_NAME_MAP['analog_3p_WT'],
                              )
+col_recon_select1, col_recon_select2 = st.columns(2)
+with col_recon_select1:
+    chosen_reconstruction = st.radio("Select a reconstruction", options=reconstruction_selections)
+    chosen_reconstruction = DATA_SET_NAME_KEY_MAP[chosen_reconstruction]
+with col_recon_select2:
+    st.write(f"**{DATA_SET_KEY_NAME_MAP['plain']}:** {DATA_SET_DESCRIPTIONS['plain']}")
+    st.write(f"**{DATA_SET_KEY_NAME_MAP['analog_3p']}:** {DATA_SET_DESCRIPTIONS['analog_3p']}")
+    st.write(f"**{DATA_SET_KEY_NAME_MAP['analog_3p_WT']}:** {DATA_SET_DESCRIPTIONS['analog_3p_WT']}")
 
-# TODO: Save in session state?
-# if "chosen_reconstruction_index" not in st.session_state:
-#     st.session_state['chosen_reconstruction_index'] = 0
-chosen_reconstruction = st.selectbox(
-        "Select a reconstruction",
-        reconstruction_selections,
-        # index=st.session_state['chosen_reconstruction_index'],
-    )
-# st.session_state['chosen_reconstruction_index'] = reconstruction_selections.index(chosen_reconstruction)
-chosen_reconstruction = DATA_SET_NAME_KEY_MAP[chosen_reconstruction]
 full_reconstruction = load_full_reconstruction(chosen_reconstruction, reconstructions_cnf)
 loo_reconstruction = load_loo_reconstruction(chosen_reconstruction, reconstructions_cnf)
 ground_truth = load_ground_truth(conf['data'])
@@ -87,8 +86,13 @@ with col_qualitative:
     qual_fig = display_predictions(full_reconstruction, qual_start_date)
     st.pyplot(qual_fig)
 
+    st.write("### Single Station Inspection")
 
-st.write(chosen_reconstruction)
+    station_indx_map = get_station_indices_map("1807")
+    gt_stations = extract_stations_from_nc(ground_truth, station_indx_map)
+    pred_stations = extract_stations_from_nc(loo_reconstruction, station_indx_map)
 
-print(conf)
-st.write(conf)
+    chosen_station = st.selectbox("Chose a station", gt_stations.keys())
+
+    fig_station = create_station_line_plot(pred_stations[chosen_station], gt_stations[chosen_station], chosen_station)
+    st.pyplot(fig_station)

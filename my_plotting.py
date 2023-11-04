@@ -126,3 +126,18 @@ def create_normed_taylor_diagram(*, ref_std, test_std_devs, test_corrs, labels, 
     plt.legend(prop=dict(size='small'), loc='center left', ncols=2, bbox_to_anchor=(1, 0.5))
 
     return fig
+
+
+def create_station_line_plot(pred, gt, stat_id):
+    fig, ax = plt.subplots(1, 1)
+
+    ax.plot(pred, 'red', label="Reconstruction")
+    ax.plot(gt, 'blue', label="Station observation")
+
+    ax.set_ylabel("ta [°C]" if "_ta" in stat_id else "slp [Pa]")
+    ax.set_xlabel("Days")
+
+    ax.grid(True)
+    ax.legend()
+
+    return fig
