@@ -4,34 +4,55 @@ import matplotlib.pyplot as plt
 from matplotlib.projections import PolarAxes
 from mpl_toolkits.axisartist import grid_finder
 from mpl_toolkits.axisartist import floating_axes
+import cartopy.crs as ccrs
+
+from config import BASE_LAT_START, BASE_LAT_END, BASE_LON_START, BASE_LON_END
+from config import CITIES
 
 
-def display_predictions(pred_mat, first_day_date):
+def display_predictions(pred_mat, start_day_id, start_date, show_contours=False):
+    dates = pd.date_range(start=start_date, periods=5, freq="D")
+    plt_kwargs = {'projection': ccrs.PlateCarree()} if show_contours else {}
+    fig, axs = plt.subplots(2, 5, figsize=(16, 4), subplot_kw=plt_kwargs)
 
-    dates = pd.date_range(start="1807-01-01", periods=365, freq="D")
-    dates = pd.Series(dates)
-    day_id = dates.index[dates.dt.date == first_day_date].values[0]
+    min_ta = np.min(pred_mat[start_day_id:start_day_id + 5, ..., 0])
+    max_ta = np.max(pred_mat[start_day_id:start_day_id + 5, ..., 0])
 
-    fig, axs = plt.subplots(2,5, figsize=(16,4))
+    min_slp = np.min(pred_mat[start_day_id:start_day_id + 5, ..., 1])
+    max_slp = np.max(pred_mat[start_day_id:start_day_id + 5, ..., 1])
 
-    min_ta = np.min(pred_mat[day_id:day_id+5,...,0])
-    max_ta = np.max(pred_mat[day_id:day_id+5,...,0])
-
-    min_slp = np.min(pred_mat[day_id:day_id+5,...,1])
-    max_slp = np.max(pred_mat[day_id:day_id+5,...,1])
+    lon = np.linspace(BASE_LON_START, BASE_LON_END, 64)
+    lat = np.linspace(BASE_LAT_START, BASE_LAT_END, 32)
 
     for i in range(5):
-        ms_ta = axs[0,i].matshow(pred_mat[day_id+i,...,0], vmin=min_ta, vmax=max_ta)
-        ms_slp = axs[1,i].matshow(pred_mat[day_id+i,...,1], vmin=min_slp, vmax=max_slp)
+        if show_contours:
+            axs[0, i].set_extent((BASE_LON_START, BASE_LON_END, BASE_LAT_START,  BASE_LAT_END), crs=ccrs.PlateCarree())
+            axs[1, i].set_extent((BASE_LON_START, BASE_LON_END,BASE_LAT_START,  BASE_LAT_END), crs=ccrs.PlateCarree())
+            axs[0, i].coastlines(resolution='110m')
+            axs[1, i].coastlines(resolution='110m')
 
-        axs[0, i].set_title(f"{dates.loc[day_id+i].strftime('%Y-%m-%d')}", fontsize=16)
+            ms_ta = axs[0, i].contourf(lon, lat, pred_mat[start_day_id + i, ..., 0], vmin=min_ta, vmax=max_ta,
+                                       transform=ccrs.PlateCarree())
+            ms_slp = axs[1, i].contourf(lon, lat, pred_mat[start_day_id + i, ..., 1], vmin=min_slp, vmax=max_slp,
+                                        transform=ccrs.PlateCarree())
+
+        else:
+            ms_ta = axs[0, i].matshow(pred_mat[start_day_id + i, ..., 0], vmin=min_ta, vmax=max_ta)
+            ms_slp = axs[1, i].matshow(pred_mat[start_day_id + i, ..., 1], vmin=min_slp, vmax=max_slp)
+
+            axs[0, i].set_title(f"{dates[i].strftime('%Y-%m-%d')}", fontsize=16)
 
         if i == 4:
-            #                      [left, bottom, width, height]
-            sub_ax1 = fig.add_axes([0.91, 0.57, 0.01, 0.26])
+            sub_ax1 = fig.add_axes([0.91, 0.57, 0.01, 0.27])
             fig.colorbar(ms_ta, cax=sub_ax1)
-            sub_ax2 = fig.add_axes([0.91, 0.15, 0.01, 0.26])
+            sub_ax2 = fig.add_axes([0.91, 0.15, 0.01, 0.27])
             fig.colorbar(ms_slp, cax=sub_ax2)
+
+        axs[0, i].set_title(f"{dates[i].strftime('%Y-%m-%d')}", fontsize=16)
+
+    axs[0, 0].set_ylabel(f"t2m [°C]", fontsize=16)
+    axs[1, 0].set_ylabel(f"slp [Pa]", fontsize=16)
+
     return fig
 
 
@@ -130,6 +151,10 @@ def create_normed_taylor_diagram(*, ref_std, test_std_devs, test_corrs, labels, 
 
 def create_station_line_plot(pred, gt, stat_id):
     fig, ax = plt.subplots(1, 1)
+
+    station_name = CITIES[stat_id.split('_')[0]]
+    title_addon = "Temperature" if "_ta" in stat_id else "Pressure"
+    ax.set_title(station_name + " " + title_addon)
 
     ax.plot(pred, 'red', label="Reconstruction")
     ax.plot(gt, 'blue', label="Station observation")

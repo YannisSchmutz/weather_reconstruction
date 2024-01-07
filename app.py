@@ -16,11 +16,14 @@ import xarray as xr
 import matplotlib.pyplot as plt
 from datetime import date
 
-from data_loading import load_full_reconstruction, load_loo_reconstruction, load_ground_truth, get_station_indices_map
+from data_loading import load_full_reconstruction, load_loo_reconstruction, load_ground_truth, \
+    get_station_indices_map, date_to_id
 from taylor_helpers import get_taylor_fig
 from my_plotting import display_predictions, create_station_line_plot
 from config import get_config, DATA_SET_KEY_NAME_MAP, DATA_SET_NAME_KEY_MAP, DATA_SET_DESCRIPTIONS
 from data_transformer import extract_stations_from_nc
+from config import CITIES
+
 
 conf = get_config()
 
@@ -36,8 +39,8 @@ st.write("This tool lets you select different reconstructions_cnf of the year 18
 
 reconstructions_cnf = conf['data']['reconstructions']
 reconstruction_selections = (DATA_SET_KEY_NAME_MAP['plain'],
-                             DATA_SET_KEY_NAME_MAP['analog_3p'],
-                             DATA_SET_KEY_NAME_MAP['analog_3p_WT'],
+                             DATA_SET_KEY_NAME_MAP['arm'],
+                             DATA_SET_KEY_NAME_MAP['arm_wt'],
                              )
 col_recon_select1, col_recon_select2 = st.columns(2)
 with col_recon_select1:
@@ -45,8 +48,8 @@ with col_recon_select1:
     chosen_reconstruction = DATA_SET_NAME_KEY_MAP[chosen_reconstruction]
 with col_recon_select2:
     st.write(f"**{DATA_SET_KEY_NAME_MAP['plain']}:** {DATA_SET_DESCRIPTIONS['plain']}")
-    st.write(f"**{DATA_SET_KEY_NAME_MAP['analog_3p']}:** {DATA_SET_DESCRIPTIONS['analog_3p']}")
-    st.write(f"**{DATA_SET_KEY_NAME_MAP['analog_3p_WT']}:** {DATA_SET_DESCRIPTIONS['analog_3p_WT']}")
+    st.write(f"**{DATA_SET_KEY_NAME_MAP['arm']}:** {DATA_SET_DESCRIPTIONS['arm']}")
+    st.write(f"**{DATA_SET_KEY_NAME_MAP['arm_wt']}:** {DATA_SET_DESCRIPTIONS['arm_wt']}")
 
 full_reconstruction = load_full_reconstruction(chosen_reconstruction, reconstructions_cnf)
 loo_reconstruction = load_loo_reconstruction(chosen_reconstruction, reconstructions_cnf)
@@ -78,21 +81,33 @@ with col_quantitative:
 
 with col_qualitative:
     st.write("## Qualitative Validation")
+    st.write("Visualizes the reconstructed temperature (top) in °C and pressure (bottom) in Pa")
     qual_start_date = st.date_input("Choose a start date for prediction visualization",
                                      value=date(1807, 1, 1),
                                      min_value=date(1807, 1, 1),
                                      max_value=date(1807, 12, 27),
                                      format="YYYY-MM-DD")
-    qual_fig = display_predictions(full_reconstruction, qual_start_date)
+    print(qual_start_date)
+    date_str = qual_start_date.strftime("%Y-%m-%d")
+    print(date_str)
+    date_id = date_to_id(date_str)
+
+    show_contours = st.toggle('Show reconstructions as contour map', value=True)
+
+    qual_fig = display_predictions(full_reconstruction, date_id, date_str, show_contours=show_contours)  # TODO
     st.pyplot(qual_fig)
 
     st.write("### Single Station Inspection")
+    st.write("The line chart shows the historic observation versus the LOO-reconstructed time series.")
 
-    station_indx_map = get_station_indices_map("1807")
+    station_indx_map = get_station_indices_map()
     gt_stations = extract_stations_from_nc(ground_truth, station_indx_map)
     pred_stations = extract_stations_from_nc(loo_reconstruction, station_indx_map)
 
-    chosen_station = st.selectbox("Chose a station", gt_stations.keys())
+    #station_ids = gt_stations.keys()
+    #station_names = [CITIES[stat_id.split('_')[0]] for stat_id in station_ids]
+
+    chosen_station = st.selectbox("Chose a station",  gt_stations.keys())
 
     fig_station = create_station_line_plot(pred_stations[chosen_station], gt_stations[chosen_station], chosen_station)
     st.pyplot(fig_station)

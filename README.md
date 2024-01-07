@@ -12,7 +12,7 @@ http://localhost:8501
 ### Create VENV
 
 ```
-python3 -m venv venv_wr
+python3.11 -m venv venv_wr
 ```
 
 ### Access VENV

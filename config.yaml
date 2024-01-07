@@ -6,13 +6,13 @@ data:
   reconstructions:
     base_path: data/predictions/
     plain:
-      full: full_pred_1807.npy
-      loo: loo_pred_1807.nc
-    analog_3p:
-      full: full_pred_1807_analog_3p.npy
-      loo: loo_pred_1807_analog_3p.nc
-    analog_3p_WT:
-      full: full_pred_1807_analog_3p_WT.npy
-      loo: loo_pred_1807_analog_3p_WT.nc
+      full: full_pred_plain.npy
+      loo: loo_pred_plain.nc
+    arm:
+      full: full_pred_arm.npy
+      loo: loo_pred_arm.nc
+    arm_wt:
+      full: full_pred_arm_wt.npy
+      loo: loo_pred_arm_wt.nc
   metadata:
     station_indices: todo

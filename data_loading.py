@@ -22,13 +22,16 @@ def load_ground_truth(data_conf):
     return xr.open_dataset(data_conf['base_path'] + data_conf['ground_truth'])
 
 
-# TODO: from config
-STATION_INDICES = "data/metadata/station_{}_matrix_indices.csv"
-def get_station_indices_map(year):
+def get_station_indices_map():
     """
-    Returns dataframe referencing the station locations depending on <missing_like>
-    :param year: Str of target inference year. E.g. "1807"
+    Returns dataframe referencing the station locations.
     :return:
     """
-    df = pd.read_csv(STATION_INDICES.format(year))
+    df = pd.read_csv("data/metadata/station_1807_matrix_indices.csv")
     return df
+
+
+def date_to_id(date):
+    dates = pd.date_range('1807-01-01', freq='D', periods=365).values
+    dates = list(map(lambda d: str(d).split('T')[0], dates))
+    return dates.index(date)

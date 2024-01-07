@@ -59,12 +59,10 @@ def handle_saisonality_on_ta(stations, miss_id_map=None, n_doy=365):
 
             saisonal_component = c0 + c1*tmp_x_sm.x1 + c2*tmp_x_sm.x2 + c3*tmp_x_sm.x3 + c4*tmp_x_sm.x4
             desaisonalized = y_obs - saisonal_component
-            ####
-            ####
             # Insert nans again:
             if miss_id_map and missing_ids:  # Only gets referenced if miss_id_map is passed...
                 nan_vals = pd.Series([np.nan for _ in missing_ids], index=missing_ids)
-                desaisonalized = desaisonalized.append(nan_vals, ignore_index=False, verify_integrity=True).sort_index()
+                desaisonalized = pd.concat([desaisonalized, nan_vals], axis=0, ignore_index=False).sort_index()
             handled_stations[stat_id] = desaisonalized.to_numpy()
         else:
             handled_stations[stat_id] = stat_vals
@@ -173,7 +171,7 @@ def _remove_miss_ids_not_in_range(miss_ids, start_date, end_date):
 
 
 def get_taylor_fig(ground_truth, loo_reconstruction, variable, start_date, end_date):
-    station_indx_map = get_station_indices_map("1807")
+    station_indx_map = get_station_indices_map()
     gt_stations = extract_stations_from_nc(ground_truth, station_indx_map)
     pred_stations = extract_stations_from_nc(loo_reconstruction, station_indx_map)
 
