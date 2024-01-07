@@ -4,6 +4,8 @@
 ## Local Execution
 ```
 streamlit run app.py
+streamlit run app.py --server.port 80
+
 ```
 http://localhost:8501
 
@@ -41,3 +43,4 @@ pip install pipreqs
 ```
 pipreqs .
 ```
+

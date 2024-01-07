@@ -87,9 +87,7 @@ with col_qualitative:
                                      min_value=date(1807, 1, 1),
                                      max_value=date(1807, 12, 27),
                                      format="YYYY-MM-DD")
-    print(qual_start_date)
     date_str = qual_start_date.strftime("%Y-%m-%d")
-    print(date_str)
     date_id = date_to_id(date_str)
 
     show_contours = st.toggle('Show reconstructions as contour map', value=True)
@@ -104,8 +102,6 @@ with col_qualitative:
     gt_stations = extract_stations_from_nc(ground_truth, station_indx_map)
     pred_stations = extract_stations_from_nc(loo_reconstruction, station_indx_map)
 
-    #station_ids = gt_stations.keys()
-    #station_names = [CITIES[stat_id.split('_')[0]] for stat_id in station_ids]
 
     chosen_station = st.selectbox("Chose a station",  gt_stations.keys())
 
