@@ -81,7 +81,7 @@ with col_quantitative:
 
 with col_qualitative:
     st.write("## Qualitative Validation")
-    st.write("Visualizes the reconstructed temperature (top) in °C and pressure (bottom) in Pa")
+    st.write("Visualizes the reconstructed temperature (top) in °C and pressure (bottom) in hPa")
     qual_start_date = st.date_input("Choose a start date for prediction visualization",
                                      value=date(1807, 1, 1),
                                      min_value=date(1807, 1, 1),
@@ -92,7 +92,7 @@ with col_qualitative:
 
     show_contours = st.toggle('Show reconstructions as contour map', value=True)
 
-    qual_fig = display_predictions(full_reconstruction, date_id, date_str, show_contours=show_contours)  # TODO
+    qual_fig = display_predictions(full_reconstruction, date_id, date_str, show_contours=show_contours)
     st.pyplot(qual_fig)
 
     st.write("### Single Station Inspection")
@@ -101,7 +101,6 @@ with col_qualitative:
     station_indx_map = get_station_indices_map()
     gt_stations = extract_stations_from_nc(ground_truth, station_indx_map)
     pred_stations = extract_stations_from_nc(loo_reconstruction, station_indx_map)
-
 
     chosen_station = st.selectbox("Chose a station",  gt_stations.keys())
 

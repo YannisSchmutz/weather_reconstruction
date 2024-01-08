@@ -15,6 +15,8 @@ def display_predictions(pred_mat, start_day_id, start_date, show_contours=False)
     plt_kwargs = {'projection': ccrs.PlateCarree()} if show_contours else {}
     fig, axs = plt.subplots(2, 5, figsize=(16, 4), subplot_kw=plt_kwargs)
 
+    pred_mat[..., 1] = pred_mat[..., 1] / 100  # Convert to hPa
+
     min_ta = np.min(pred_mat[start_day_id:start_day_id + 5, ..., 0])
     max_ta = np.max(pred_mat[start_day_id:start_day_id + 5, ..., 0])
 
@@ -31,10 +33,8 @@ def display_predictions(pred_mat, start_day_id, start_date, show_contours=False)
             axs[0, i].coastlines(resolution='110m')
             axs[1, i].coastlines(resolution='110m')
 
-            ms_ta = axs[0, i].contourf(lon, lat, pred_mat[start_day_id + i, ..., 0], vmin=min_ta, vmax=max_ta,
-                                       transform=ccrs.PlateCarree())
-            ms_slp = axs[1, i].contourf(lon, lat, pred_mat[start_day_id + i, ..., 1], vmin=min_slp, vmax=max_slp,
-                                        transform=ccrs.PlateCarree())
+            ms_ta = axs[0, i].contourf(lon, lat, pred_mat[start_day_id + i, ..., 0],  transform=ccrs.PlateCarree())
+            ms_slp = axs[1, i].contourf(lon, lat, pred_mat[start_day_id + i, ..., 1], transform=ccrs.PlateCarree())
 
         else:
             ms_ta = axs[0, i].matshow(pred_mat[start_day_id + i, ..., 0], vmin=min_ta, vmax=max_ta)
@@ -51,7 +51,7 @@ def display_predictions(pred_mat, start_day_id, start_date, show_contours=False)
         axs[0, i].set_title(f"{dates[i].strftime('%Y-%m-%d')}", fontsize=16)
 
     axs[0, 0].set_ylabel(f"t2m [°C]", fontsize=16)
-    axs[1, 0].set_ylabel(f"slp [Pa]", fontsize=16)
+    axs[1, 0].set_ylabel(f"slp [hPa]", fontsize=16)
 
     return fig
 
@@ -150,19 +150,33 @@ def create_normed_taylor_diagram(*, ref_std, test_std_devs, test_corrs, labels, 
 
 
 def create_station_line_plot(pred, gt, stat_id):
+    import matplotlib.dates as mdates
+
     fig, ax = plt.subplots(1, 1)
+
+    if "_slp" in stat_id:
+        # Convert to hPa
+        pred = pred / 100
+        gt = gt / 100
+
+    pred_df = pd.DataFrame({'vals': pred, 'dates': pd.date_range('1807-01-01', freq='D', periods=365)})
+    gt_df = pd.DataFrame({'vals': gt, 'dates': pd.date_range('1807-01-01', freq='D', periods=365)})
 
     station_name = CITIES[stat_id.split('_')[0]]
     title_addon = "Temperature" if "_ta" in stat_id else "Pressure"
     ax.set_title(station_name + " " + title_addon)
 
-    ax.plot(pred, 'red', label="Reconstruction")
-    ax.plot(gt, 'blue', label="Station observation")
+    ax.plot('dates', 'vals', data=pred_df, color='red', label="Reconstruction")
+    ax.plot('dates', 'vals', data=gt_df, color='blue', label="Station observation")
 
-    ax.set_ylabel("ta [°C]" if "_ta" in stat_id else "slp [Pa]")
-    ax.set_xlabel("Days")
+    ax.set_ylabel("ta [°C]" if "_ta" in stat_id else "slp [hPa]")
+    ax.set_xlabel("Year 1807")
 
     ax.grid(True)
     ax.legend()
+
+    # Major ticks every half year, minor ticks every month,
+    ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=(1, 7)))
+    ax.xaxis.set_minor_locator(mdates.MonthLocator())
 
     return fig
