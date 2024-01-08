@@ -152,7 +152,7 @@ def create_normed_taylor_diagram(*, ref_std, test_std_devs, test_corrs, labels, 
 def create_station_line_plot(pred, gt, stat_id):
     import matplotlib.dates as mdates
 
-    fig, ax = plt.subplots(1, 1)
+    fig, ax = plt.subplots(1, 1, figsize=(15, 5))
 
     if "_slp" in stat_id:
         # Convert to hPa
@@ -170,13 +170,14 @@ def create_station_line_plot(pred, gt, stat_id):
     ax.plot('dates', 'vals', data=gt_df, color='blue', label="Station observation")
 
     ax.set_ylabel("ta [°C]" if "_ta" in stat_id else "slp [hPa]")
-    ax.set_xlabel("Year 1807")
+    # ax.set_xlabel("Year 1807")
 
     ax.grid(True)
     ax.legend()
 
     # Major ticks every half year, minor ticks every month,
-    ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=(1, 7)))
-    ax.xaxis.set_minor_locator(mdates.MonthLocator())
+    # ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=(1, 7)))
+    ax.xaxis.set_major_locator(mdates.MonthLocator())
+    ax.xaxis.set_minor_locator(mdates.DayLocator(interval=5))
 
     return fig
